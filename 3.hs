@@ -3,21 +3,21 @@ import Data.List
 -- rotate clockwise
 rotCW  = map reverse . transpose
 
--- append column to matrix
-appCol t c = zipWith (\a b -> a ++ [b] ) t c
+-- append column to grid
+appCol = zipWith (\g c -> g ++ [c])
 
 grid n = until (any $ elem n) (rotCW . appColUp) [[1]] where 
     -- new column grows upwards
-    appColUp rows = appCol rows (reverse [i..j])
-       where i = (sum $ map length rows) + 1  -- 2. start new col 
-             j = i + (length rows) - 1 -- 3. end new col
+    appColUp g = appCol g (reverse [i..j])
+       where i = (sum $ map length g) + 1  -- 2. start new col 
+             j = i + (length g) - 1 -- 3. end new col
 
 steps n = h + v
   where g = grid n
         h = dist n g
         v = dist n (rotCW g)
-        dist k r = abs $ (pos k) - (pos 1)
-         where pos n = head $ findIndices (==n) $ head $ filter (elem n) r
+        dist k g = abs $ (pos k) - (pos 1)
+         where pos n = head $ findIndices (==n) $ head $ filter (elem n) g
 
 --------------------------
 
