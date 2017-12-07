@@ -1,3 +1,4 @@
+import Control.Monad.ST
 import           Control.Monad.Primitive     (PrimMonad, PrimState)
 import qualified Data.Vector.Unboxed         as V
 import qualified Data.Vector.Unboxed.Mutable as M
@@ -36,11 +37,24 @@ step (n, p, xs) = (n + 1, p + o, V.take p xs V.++ (V.fromList [(xs V.! p)+inc]) 
 
 --------------
 
-solve inp = V.modify ((stepM 0) 0) inp
-  where 
-    stepM s p xs = do
+f :: (Num a, Ord a, PrimMonad m, M.Unbox a) =>
+     (Int, M.MVector (PrimState m) a)
+     -> m (Int, M.MVector (PrimState m) a)
+f (p, xs) = do
         o <- M.read xs p
         M.write xs 0 (o+inc o)
+        return (p, xs)
+        where 
+          inc o = if o >= 3 then (-1) else 1
+
+solve inp = V.modify ((stepM 0) 0) inp
+  where 
+    stepM n p xs = do
+     if (p < 0 || p > M.length xs) then return ()
+     else do
+        o <- M.read xs p
+        M.write xs 0 (o+inc o)
+        --stepM (n + 1) (p + o) xs
         where 
           inc o = if o >= 3 then (-1) else 1
 
