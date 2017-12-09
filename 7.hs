@@ -30,7 +30,7 @@ solve2 t = head [ w + diff | (n,w,ks) <- nodes t, n==name]
 
 -- transform tree
 path (Node (n,w) kids) = (n, w, map get kids):(rec kids)
-  where rec k = if null odd then [] else path (head (head odd)) 
+  where rec k = if null odd then [] else path $ head $ head odd
         (odd,others) = partition ((<= 1) . length) groups
         groups = groupBy ((==) `on` snd.get) kids
 
