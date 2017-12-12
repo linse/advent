@@ -7,43 +7,36 @@ import Data.Bits
 import Text.Printf
  
 main = do
-  filestring <- readFile "input.txt"
-  let filearr = map (\d -> read d::Int) $ words $ map (\c -> if c==',' then ' ' else c) filestring
   --let file = [3, 4, 1, 5]
-  --let l = [0 .. 4]
-  let l = [0 .. 255]
-  putStrLn $ show $ solve l 0 0 filearr
+  --let seq = [0 .. 4]
+  let seq = [0 .. 255]
+  filestring <- readFile "input.txt"
+  let filearr = map (read::String->Int) $ words $ map (\c -> if c==',' then ' ' else c) filestring
+  putStrLn $ show $ solve seq filearr
+  putStrLn $ knotHash seq filestring
 
-  let ascii = (map ord $ concat $ lines $ filestring) ++ [17, 31, 73, 47, 23]
-  let (_, _, _, permut) = last $ solve2 64 l ascii
-  let hash = concatMap hex $ map dense $ blocks permut
-  putStrLn hash
 
-dense :: [Int] -> Int
-dense = foldr xor 0
+solve seq lengths = foldl (*) 1 $ take 2 perm where
+  perm = hashRounds 1 seq lengths
 
-blocks = splitEvery 16 where
-  splitEvery n = takeWhile (not . null) . unfoldr ( Just . splitAt n)
+knotHash seq string = concatMap hex $ map dense $ blocks perm where
+  perm = hashRounds 64 seq ascii
+  ascii = (map ord $ concat $ lines $ string) ++ [17, 31, 73, 47, 23]
 
-hex = printf "%02x"
+  dense :: [Int] -> Int
+  dense = foldr xor 0
+  
+  blocks = splitEvery 16 where
+    splitEvery n = takeWhile (not . null) . unfoldr ( Just . splitAt n)
+  
+  hex = printf "%02x"
 
-solve2 rounds seq lengths = hash rounds seq 0 0 lengths where 
-  hash round permut pos ss [] 
-    | round <= 1 = [(pos, ss, round, permut)]
-    | otherwise = (pos, ss, round, []) : hash (round-1) permut pos ss lengths
-  hash round permut pos ss (x:xs) = hash round permut' pos' ss' xs where 
-      l = length permut
-      (rev, keep) = splitAt x $ take l $ drop pos $ cycle permut
-      permut' = take l $ drop (l - pos) $ cycle (reverse rev ++ keep)
+hashRounds rds seq lengths = hashRound rds seq 0 0 lengths where
+  hashRound rd perm pos ss [] 
+    | rd <= 1 = perm
+    | otherwise = hashRound (rd - 1) perm pos ss lengths -- take same lengths again
+  hashRound rd perm pos ss (x:xs) = hashRound rd perm' pos' (ss + 1) xs where 
+      l = length perm
+      (rev, keep) = splitAt x $ take l $ drop pos $ cycle perm
+      perm' = take l $ drop (l - pos) $ cycle (reverse rev ++ keep)
       pos' = (pos + x + ss) `mod` l
-      ss' = ss + 1
-
---------
-
-solve list pos ss [] = foldl (*) 1 (take 2 list)
-solve list pos ss (x:xs) = solve list' pos' ss' xs where 
-    l = length list
-    (rev, keep) = splitAt x $ take l $ drop pos $ cycle list
-    list' = take l $ drop (l - pos) $ cycle (reverse rev ++ keep)
-    pos' = (pos + x + ss) `mod` l
-    ss' = ss + 1
