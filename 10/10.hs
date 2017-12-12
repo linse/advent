@@ -15,12 +15,11 @@ main = do
   putStrLn $ show $ solve seq filearr
   putStrLn $ knotHash seq filestring
 
-
 solve seq lengths = foldl (*) 1 $ take 2 perm where
-  perm = hashRounds 1 seq lengths
+  perm = hash seq lengths
 
 knotHash seq string = concatMap hex $ map dense $ blocks perm where
-  perm = hashRounds 64 seq ascii
+  perm = hash seq (concat $ replicate 64 ascii)
   ascii = (map ord $ concat $ lines $ string) ++ [17, 31, 73, 47, 23]
 
   dense :: [Int] -> Int
@@ -31,11 +30,9 @@ knotHash seq string = concatMap hex $ map dense $ blocks perm where
   
   hex = printf "%02x"
 
-hashRounds rds seq lengths = hashRound rds seq 0 0 lengths where
-  hashRound rd perm pos ss [] 
-    | rd <= 1 = perm
-    | otherwise = hashRound (rd - 1) perm pos ss lengths -- take same lengths again
-  hashRound rd perm pos ss (x:xs) = hashRound rd perm' pos' (ss + 1) xs where 
+hash seq lengths = hash' seq 0 0 lengths where
+  hash' perm pos ss []     = perm
+  hash' perm pos ss (x:xs) = hash' perm' pos' (ss + 1) xs where 
       l = length perm
       (rev, keep) = splitAt x $ take l $ drop pos $ cycle perm
       perm' = take l $ drop (l - pos) $ cycle (reverse rev ++ keep)
