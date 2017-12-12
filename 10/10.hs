@@ -14,43 +14,34 @@ main = do
   let l = [0 .. 255]
   putStrLn $ show $ solve l 0 0 filearr
 
-  let ascii = (map ord $ rstrip $ filestring) ++ [17, 31, 73, 47, 23]
-  let (_, _, _, permut) = last $ solve2 0 l ascii
+  let ascii = (map ord $ concat $ lines $ filestring) ++ [17, 31, 73, 47, 23]
+  let (_, _, _, permut) = last $ solve2 64 l ascii
   let hash = concatMap hex $ map dense $ blocks permut
   putStrLn hash
-
-testblock = [65, 27, 9, 1, 4, 3, 40, 50, 91, 7, 6, 0, 2, 5, 68, 22]
 
 dense :: [Int] -> Int
 dense = foldr xor 0
 
-blocks = splitEvery 16
- where
-  splitEvery n = takeWhile (not . null) . unfoldr (Just . splitAt n)
+blocks = splitEvery 16 where
+  splitEvery n = takeWhile (not . null) . unfoldr ( Just . splitAt n)
 
 hex = printf "%02x"
 
-rstrip = reverse . dropWhile isSpace . reverse
-
-
-solve2 rd lis lens = solve2' rd lis 0 0 lens
- where 
-  solve2' round list pos ss [] 
-    | round >= 63 = [(pos, ss, round, list)]
-    | otherwise = (pos, ss, round, []) : solve2' (round+1) list pos ss lens
-  solve2' round list pos ss (x:xs) = solve2' round list' pos' ss' xs
-    where 
-      l = length list
-      (rev, keep) = splitAt x $ take l $ drop pos $ cycle list
-      list' = take l $ drop (l - pos) $ cycle (reverse rev ++ keep)
+solve2 rounds seq lengths = hash rounds seq 0 0 lengths where 
+  hash round permut pos ss [] 
+    | round <= 1 = [(pos, ss, round, permut)]
+    | otherwise = (pos, ss, round, []) : hash (round-1) permut pos ss lengths
+  hash round permut pos ss (x:xs) = hash round permut' pos' ss' xs where 
+      l = length permut
+      (rev, keep) = splitAt x $ take l $ drop pos $ cycle permut
+      permut' = take l $ drop (l - pos) $ cycle (reverse rev ++ keep)
       pos' = (pos + x + ss) `mod` l
       ss' = ss + 1
 
 --------
 
 solve list pos ss [] = foldl (*) 1 (take 2 list)
-solve list pos ss (x:xs) = solve list' pos' ss' xs
-  where 
+solve list pos ss (x:xs) = solve list' pos' ss' xs where 
     l = length list
     (rev, keep) = splitAt x $ take l $ drop pos $ cycle list
     list' = take l $ drop (l - pos) $ cycle (reverse rev ++ keep)
