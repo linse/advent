@@ -8,8 +8,8 @@ import Text.Printf
  
 main = do
   let seq = [0 .. 255]
-  let filestring = zipWith (\a b-> a++"-"++show b) (repeat "jzgqcdpd") [0..127]--readFile "input.txt"
-  putStrLn $ solve seq filestring 
+  let string = zipWith (\a b-> a++"-"++show b) (repeat "jzgqcdpd") [0..127]
+  putStrLn $ solve seq string 
 
 solve seq string = show $length $filter (\a -> a=='1') $ concatMap (knotHash seq) $ string
 
